@@ -1,26 +1,25 @@
 package com.aj.parallelproject.repo;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.aj.parallelproject.bean.Customer;
 
 
-public class WalletRepoImpl implements IWalletRepo {
-	private Map<String,Customer> data;
+public class WalletRepoImpl {
+	private static Map<String,Customer> data=new HashMap<String, Customer>();
 	
-	public WalletRepoImpl(Map<String, Customer> data) {
+	public WalletRepoImpl() {
 		super();
-		this.data = data;
 	}
 
-	public boolean save(Customer customer) {
+	public Customer save(Customer customer) {
 		data.put(customer.getMobileNo(), customer);
-		return true;
+		return customer;
 	}
 
 	public Customer findOne(String mobileNo) {
 		return data.get(mobileNo);
 	}
-
 
 }

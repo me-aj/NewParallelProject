@@ -3,81 +3,67 @@ package com.aj.parallelproject.service;
 import java.math.BigDecimal;
 
 import com.aj.parallelproject.bean.Customer;
-import com.aj.parallelproject.bean.Wallet;
-import com.aj.parallelproject.repo.IWalletRepo;
+import com.aj.parallelproject.dao.IWalletDao;
+import com.aj.parallelproject.dao.WalletDaoImpl;
 
 public class WalletServiceImpl implements IWalletService {
 
-	private IWalletRepo repo;
+	private IWalletDao dao;
 
-	public WalletServiceImpl(IWalletRepo repo) {
-		super();
-		this.repo = repo;
+	public WalletServiceImpl() {
+		dao = new WalletDaoImpl();
 	}
 
 	public Customer createAccount(String name, String mobileNo,
 			BigDecimal amount) {
-		Customer customer = new Customer(name, mobileNo, new Wallet(amount));
-		if (repo.save(customer)) {
-			return customer;
+		Customer customer = null;
+		if (null != name && null != mobileNo
+				&& BigDecimal.ZERO.compareTo(amount) >= 0
+				&& "^[a-zA-Z0-9]+$".matches(name)
+				&& "\\d{10}".matches(mobileNo)) {
+			customer = dao.createAccount(name, mobileNo, amount);
 		}
-		return null;
+		return customer;
 	}
 
 	public Customer showBalance(String mobileNo) {
-
-		return repo.findOne(mobileNo);
+		Customer customer = null;
+		if ("\\d{10}".matches(mobileNo)) {
+			customer = dao.showBalance(mobileNo);
+		}
+		return customer;
 	}
 
 	public Customer fundTransfer(String sourceMobileNo, String targetMobileNo,
 			BigDecimal amount) {
-		Customer giver = repo.findOne(sourceMobileNo);
-		Customer taker = repo.findOne(targetMobileNo);
-		Wallet sourceWallet = giver.getWallet();
-		Wallet targetWallet = taker.getWallet();
-
-		if ((sourceWallet != null && targetWallet != null)
-				&& (sourceWallet.getBalance().compareTo(amount) >= 0)) {
-
-			sourceWallet.setBalance(sourceWallet.getBalance().subtract(amount));
-			targetWallet.setBalance(targetWallet.getBalance().add(amount));
-
-			giver.setWallet(sourceWallet);
-			taker.setWallet(targetWallet);
-
-			repo.save(giver);
-			repo.save(taker);
-			return giver;
+		Customer customer = null;
+		if (null != sourceMobileNo && null != targetMobileNo
+				&& "\\d{10}".matches(sourceMobileNo)
+				&& "\\d{10}".matches(targetMobileNo)
+				&& BigDecimal.ZERO.compareTo(amount)>0) {
+			customer=dao.fundTransfer(sourceMobileNo, targetMobileNo, amount);
 		}
-
-		return null;
+		return customer;
 	}
 
 	public Customer depositAmount(String mobileNo, BigDecimal amount) {
-
-		Customer customer = repo.findOne(mobileNo);
-		if (customer != null && customer.getWallet() != null) {
-			Wallet wallet = customer.getWallet();
-			wallet.setBalance(wallet.getBalance().add(amount));
-			customer.setWallet(wallet);
-			repo.save(customer);
-			return customer;
+		Customer customer = null;
+		if (null != mobileNo && "\\d{10}".matches(mobileNo)
+				&& BigDecimal.ZERO.compareTo(amount) >= 0) {
+			customer = dao.depositAmount(mobileNo, amount);
 		}
-		return null;
+		return customer;
 	}
 
 	public Customer withdrawAmount(String mobileNo, BigDecimal amount) {
-
-		Customer customer = repo.findOne(mobileNo);
-		if (customer != null && customer.getWallet() != null) {
-			Wallet wallet = customer.getWallet();
-			if(wallet.getBalance().doubleValue()>=amount.doubleValue()){
-			wallet.setBalance(wallet.getBalance().subtract(amount));
-			customer.setWallet(wallet);
-			repo.save(customer);
-			return customer;
+		Customer customer = null;
+		if (null != mobileNo && "\\d{10}".matches(mobileNo)
+				&& BigDecimal.ZERO.compareTo(amount) >= 0) {
+			if (dao.showBalance(mobileNo).getWallet().getBalance()
+					.compareTo(amount) >= 0) {
+				customer = dao.withdrawAmount(mobileNo, amount);
 			}
 		}
-		return null;
+		return customer;
 	}
 }
